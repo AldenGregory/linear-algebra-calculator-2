@@ -40,7 +40,7 @@ def row_echelon_form(matrix, output_decimal = False):
         error_frame = Matrix(empty)
 
         error_frame.columns = ["At least one of the entries in\
-        your matrix is not a number."]
+        your matrix is not a valid number."]
 
         return error_frame
 
@@ -410,3 +410,81 @@ def file_generator_from_frame(input_frame):
         line = line[:len(line) - 1] + "\n"
 
         yield line
+
+def column_names_valid(column_names, augmented_name):
+    '''
+    This function finds if every column name in column_names is valid. (It is
+    unique and does not share a name with the augmented column.)
+    Args:
+        variable_names: a list of variable names that are strings.
+        augmented_name: a string that is the name of the augmented column and
+        cannot be used as a column name by the user.
+    Returns:
+        a panda DataFrame explaining the error if columns are not valid
+        and None if they are.
+    '''
+
+    # Sets are like dictionaries without values or like lists without allowing
+    # repeats or having an order. They use add method for addition rather than 
+    # a key name like with dictionaries or append like with lists.
+    occured_name_set = set()
+
+    valid_frame = pd.DataFrame()
+
+    valid_frame[""] = []
+
+    for column_name in column_names:
+        if column_name in occured_name_set:
+
+            name_error_column(
+                error_frame = valid_frame,
+                error_message = "The name " + column_name + " occurred " + \
+                "multiple times. If you repeated this name, please " +
+                "remove all repeats. Otherwise, this name will be used in " +
+                "the output, so you cannot use it as a column name."
+            )             
+
+            return valid_frame
+        
+        elif column_name == "":
+
+            name_error_column(
+                error_frame = valid_frame,
+                error_message = "One of your column names is empty. You " + \
+                "cannot use blank column names. Please edit your column names."
+            )
+
+        else:
+            occured_name_set.add(column_name)
+
+    if augmented_name in occured_name_set:
+
+        name_error_column(
+            error_frame = valid_frame,
+            error_message = 'You cannot use the name "' + augmented_name + \
+            '". Please change that name.'
+        )
+        
+        return valid_frame
+
+    return valid_frame
+
+def name_error_column(error_frame, error_message):
+    '''
+    This function sets the first column of the error frame to an error.
+    message.
+    Args:
+        error_frame: an empty panda DataFrame with one column name set to ""
+        error_message: a string that is the message that the column name of
+        error_frame will be set to 
+    Returns:
+        None
+    '''
+
+    # inplace means the original DataFrame is modified rather than
+    # a copy.
+
+    error_frame.rename(
+        columns = {"":  error_message},
+        inplace = True
+    )

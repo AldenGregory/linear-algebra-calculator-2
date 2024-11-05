@@ -29,15 +29,6 @@ def solution_set(linear_system, output_decimal):
     # This removes the constant column name.
     variable_names.pop(len(variable_names) - 1)
 
-    # This returns an error DataFrame if there are repeat variable names.
-    repeat_variable_error = variable_names_unique(variable_names)
-
-    # This returns an emtpy DataFrame if there are no repeats and a DataFrame
-    # with one column if there are.
-
-    if repeat_variable_error.columns[0] != "":
-        return repeat_variable_error
-
     solved_system_frame = calculations.reduced_row_echelon_form(
         linear_system,
         output_decimal
@@ -268,13 +259,6 @@ def parametric_vector_solution_set(linear_system, output_decimal):
     # This removes the constant column name.
     variable_names.pop(len(variable_names) - 1)
 
-    repeat_variable_error = variable_names_unique(variable_names)
-
-    # This returns an emtpy DataFrame if there are no repeats and a DataFrame
-    # with one column if there are.
-    if repeat_variable_error.columns[0] != "":
-        return repeat_variable_error
-
     solved_system_frame = calculations.reduced_row_echelon_form(
         linear_system,
         output_decimal
@@ -323,7 +307,7 @@ def parametric_vector_solution_set(linear_system, output_decimal):
 
             # This indicates that the row is a zero row
 
-            if not pivot_column_reached and j == solved_system_array.shape[1] -\
+            if not pivot_column_reached and j == solved_system_array.shape[1]-\
                 2 and coefficient == 0:
                 
                 # This ensures that the final column will be added as a free 
@@ -398,8 +382,6 @@ def parametric_vector_solution_set(linear_system, output_decimal):
                     variable_multiple
 
         i += 1
-
-    # Resume here
 
     # If the last column has been a pivot, it is still possible for the system
     # to be inconsistent. The while loop only catches inconsistent systems where
@@ -546,55 +528,3 @@ def parametric_vector_solution_set(linear_system, output_decimal):
 
 
     return parametric_vector_frame
-    
-def variable_names_unique(variable_names):
-    '''
-    This function finds if every variable name in variable_names is unique.
-    Args:
-        variable_names: a list of variable names that are strings.
-    Returns:
-        a panda DataFrame explaining the error if variable names are repeated
-        and None if they are not.
-    '''
-
-    # Sets are like dictionaries without values or like lists without allowing
-    # repeats or having an order. They use add method for addition rather than 
-    # a key name like with dictionaries or append like with lists.
-    occured_name_set = set()
-
-    repeat_frame = pd.DataFrame()
-
-    repeat_frame[""] = []
-
-    for variable_name in variable_names:
-        if variable_name in occured_name_set:
-
-            # inplace means the original DataFrame is modified rather than
-            # a copy.
-            repeat_frame.rename(
-                columns = {"": "You used the same name for multiple \
-                variable names which is not allowed. Please\
-                edit your variable names."},
-                inplace = True
-            )
-                        
-
-            return repeat_frame
-        
-        else:
-            occured_name_set.add(variable_name)
-
-    if "Constant" in occured_name_set:
-
-        # inplace means the original DataFrame is modified rather than
-        # a copy.
-        repeat_frame.rename(
-            columns = {"": 'You cannot use the variable name \
-            "Constant" as that is reserved for the \
-            augmented column.'},
-            inplace = True
-        )
-        
-        return repeat_frame
-
-    return repeat_frame

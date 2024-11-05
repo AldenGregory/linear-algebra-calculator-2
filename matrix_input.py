@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
+import calculations
 
 # Mostly express will be used in this module for the spaced_section function.
 from format import spaced_section_express as spaced_section, \
     spaced_section_core
 
 from shiny import App, Inputs, Outputs, Session, render, ui, module, \
-    reactive, express
+    reactive
 
 # This module defines the ui that will be displayed to the user as they enter
 # their matrix. It acts similarly to the ui section of an app.
@@ -15,6 +16,17 @@ def matrix_input_ui(
     input_method_label = \
         "Choose your preferred method for inputting a matrix."
 ):
+    '''
+    This function defines the ui for user inputs in a nav_panel. These involve
+    options for how the user wants to input their matrix and ways for the user
+    to input their matrix.
+    Args: 
+        input_method_label: A label that will display above the option of
+        whether to input a matrix manually or with a CSV file.
+    Returns:
+        a ui.column component holding the ui that allows the user to input
+        their matrix.
+    '''
     # A column taking up the whole width is returned.
     return ui.column(
         12,
@@ -58,15 +70,87 @@ def matrix_input_server(
     csv_entry_label = \
         "Add a CSV file holding your matrix. Your file should " + \
         "consist of integers, decimals, or fractions of the " + \
-        "format \"a/b\"."
+        "format \"a/b\".",
+    augmented_column = False,
+    augmented_column_name = None
 ):
+    '''
+    This function defines the server function for the matrix_input module and
+    changes its ui based on user input.
+    Args:
+        input, output, session: Arguments necessary for all server functions in
+        shiny that do not actually need to be passed to them when they are
+        called.
+        square_matrix: A boolean that is True if the user input has to be
+        square and False otherwise.
+        column_num_meaning: A string specifying what the number of columns
+        represents the number of. For example, in a linear system the number of
+        columns represents the number of variables. This string should be
+        capital and plural, so in the case of linear systems,
+        column_num_meaning would be set to "Variables"
+        row_num_meaning: A string specifying what the number of rows represents
+        the number of. For example, in a linear system, the number rows
+        represents the number of equations. This should be capital and plural
+        so for linear systems this would be set to "Equations".
+        column_name_choice: A boolean that is True if the user gets to choose
+        column names in the input matrix and False otherwise.
+        column_name_meaning: A string representing what a column name is a name
+        for. This should be lower case and singular. So in the case of linear
+        systems, this parameter would be set to "variable".
+        manual_entry_label: A string representing the label that should display
+        above an input matrix in the nav_panel this module is in.
+        csv_entry_label: A string representing the label that should display
+        above a CSV file input section in the nav_panel this module is in.
+        augmented_column: a boolean that is True if there is an augmented
+        column in the input matrix and False otherwise.
+        augmented_column_name: a string holding the name that will be given to
+        the augmented column of the input matrix.
+    Returns:
+        a tuple where the first item is a reactive.Value object holding a
+        reactive.Value object holding a pandas DataFrame holding the user's
+        input matrix and the second item is a reactive.Value object holding a
+        string that is either "decimal" or "fraction" depending on the type of
+        output the user prefers.
+    '''
+    # A reactive value, return_matrix, for the user's input matrix will be
+    # returned as a way of passing the input matrix from this module to the
+    # outer app. 
+
+    # For manual input, return_matrix should hold a data_view which is itself a
+    # reactive value. It cannot hold the value held in data_view as based on
+    # trial and error, this can cause errors when the program tries to access
+    # the value in data_view using data_view() before it has been set.
+
+    # Additionally, data_view itself is reactively updated, but if
+    # return_matrix were set to the value held in data_view, changing data_view
+    # would not affect the reactive variable value of return_matrix already
+    # returned outside of  this function, as the value inside data_view is not
+    # reactive.
+    # Outside the function there would only be a reactive.Value
+    # object holding some number specified by data_view() at the time
+    # return_matrix was returned. An int is immutable, so the value in the
+    # reactive.Value object would never change.
+
+    # So return matrix is  initially set to a reactive value holding a reactive
+    # value holding 
+    # an empty DataFrame. The reason it holds a reactive value in a reactive
+    # value, is that based on trial and error, once the server function is
+    # called, it returns
+    # return_matrix before its inner functions are called. If return_matrix
+    # were simply a reactive value and were to be set to another reactive
+    # value when the input method changes, or a new CSV file is added,
+    # return_matrix would be affected by being set to a new object, but
+    # the Value object that was already returned would not be affected. So
+    # by wrapping a reactive value in a reactive value, and setting the outer
+    # reactive value to a different inner reactive value upon input updates,
+    # it is possible for updates to return_matrix to effect the reactive value
+    # returned by the server module outside of the server module.
     
-    # A reactive value for the user's input matrix will be returned as a way
-    # of passing the input matrix from this module to the outer app. It is 
-    # initially set to None, so if this value is set to None when it is used
-    # in some other module or the larger app, it should indicate that the user
-    # did not upload a file.
-    return_matrix = reactive.value(None)
+    # A reactive value in a reactive value is only necessary for manual input
+    # since data_view is a reactive value, but it is done in all cases since
+    # other functions will treat the output of the server function as a
+    # reactive value in a reactive value.
+    return_matrix = reactive.value(reactive.value(pd.DataFrame()))
 
     # This function is kept separate from display_input as based on trial and
     # error, shiny does not allow an input to be used in the same function it
@@ -223,12 +307,8 @@ def matrix_input_server(
                         data = column_entry_frame,
                         editable = True
                     )
-
-            # The input_matrix function is made global so that the
-            # return_matrix can be set to the user-entered values in the
-            # DataGrid.
-            global input_matrix
             
+            # The label for the manual entry table is displayed.
             spaced_section(manual_entry_label)
 
             # This function displays the actual input matrix to the user.
@@ -240,7 +320,22 @@ def matrix_input_server(
                 # Column names is either set to the user-chosen names or
                 # default names of the form: Column 1, Column 2, etc...
                 if column_name_choice:
-
+                    
+                    # The columns of the system_frame panda will be set
+                    # to column_names. The user enters the variable 
+                    # names vertically, so the panda containing their 
+                    # entry is first converted to a 2d numpy array with
+                    # 1 column, then transposed meaning that its rows
+                    # and columns are switched. This means that the
+                    # variable names are now horizontal in a 2d numpy
+                    # array where the first row contains every variable
+                    # name. To access the 1d list of variable names,
+                    # index 0 of this 2d array is accessed. Then, since
+                    # the columns attribute of DataFrame is a list, the
+                    # array is converted to a list. Lastly, the column
+                    # title "Constant" is appended to the list because
+                    # the entry matrix is augmented with the equations'
+                    # solutions.
                     column_names = np.transpose(
                         column_name_input.data_view().to_numpy()
                     ).tolist()[0] 
@@ -251,11 +346,12 @@ def matrix_input_server(
                         # the range.
                         column_names.append("Column " + str(i + 1))
                 
-                if column_name_choice:
+                if column_name_choice and augmented_column:
                     # It is checked that every column name is unique.
                     repeat_column_error = \
-                        column_names_unique(
-                            column_names
+                        calculations.column_names_valid(
+                            column_names,
+                            augmented_column_name
                         )
                     
                     # This returns a DataFrame with one column named "" if
@@ -266,10 +362,10 @@ def matrix_input_server(
                             width = "80%"
                         )
                     
-                    # So far column_name_choice is only available for
-                    # linear systems and in this case, the augmented column
-                    # is named constant. This likely will be changed later.
-                    column_names.append("Consant")
+                    # The augmented column is added if there is one.
+                    if augmented_column:
+                        column_names.append(augmented_column_name)
+                    
 
                 # In case something has been appended onto column names,
                 # the column number depends on the length of column names
@@ -289,6 +385,10 @@ def matrix_input_server(
                     width = "80%"
                 )
 
+            # The set function returns True, so to prevent shiny express from
+            # displaying its output interactively is assigned to a variable.
+            holder = return_matrix.set(input_matrix.data_view)
+
         # The following code is reached when the input type is a CSV file.
         else:
             spaced_section(
@@ -298,70 +398,55 @@ def matrix_input_server(
             ui.input_file("matrix_input", "Add your CSV file here:",
                             accept = ["csv"], multiple = False)
 
-    # In this function, return_matrix is set to whatever the user entered.
-    @reactive.effect
-    def set_return_matrix():
-        if input.input_method() == "CSV" and input.input_file != None:
-            # File inputs return a list of dictionaries where
-            # each dictionary corresponds with a file. Since
-            # there is only one file, index 0 of the list is
-            # accessed.
-            return_matrix.set(input.input_file()[0]["datapath"])
-
-        elif input.input_method() == "Matrix":
-            return_matrix.set(input_matrix.data_view())
-
     # The user-inputted matrix is returned. It will either be a panda or None.
-    return return_matrix   
-                    
+    # Additionally, the input number format, either "Decimal" or "Fraction"
+    # will be returned.
 
-def column_names_unique(column_names):
-    '''
-    This function finds if every column name in column_names is unique.
-    Args:
-        variable_names: a list of variable names that are strings.
-    Returns:
-        a panda DataFrame explaining the error if variable names are repeated
-        and None if they are not.
-    '''
+    @reactive.effect
+    def update_return_csv():
 
-    # Sets are like dictionaries without values or like lists without allowing
-    # repeats or having an order. They use add method for addition rather than 
-    # a key name like with dictionaries or append like with lists.
-    occured_name_set = set()
+        # If the input type is a CSV file, then the return_matrix value should
+        # be updated whenever a new CSV file is added. This function depends on
+        # the reactive value, matrix_input, which changes whenever a new file
+        # is uploaded, invalidating this function and causing it to run again.
+        # So return_matrix is reset whenever a new file is added.
+        if input.input_method() == "CSV" and input.matrix_input() != None:
+            
+            # The user will only enter column names as a header if they get to
+            # choose column names. In that case the header will be set to row
+            # 0. Otherwise, there will be no header.
 
-    repeat_frame = pd.DataFrame()
+            header = None
 
-    repeat_frame[""] = []
+            if column_name_choice:
+                header = 0
 
-    for column_name in column_names:
-        if column_name in occured_name_set:
+            updated_matrix = \
+                pd.read_csv(
+                    input.matrix_input()[0]["datapath"],
+                    header = header
+                )
+            
+            # When there is an augmented column, the user will enter the values
+            # for that column but should not enter a header. If they do that
+            # header will be disregarded and set to the augmented_column name.
+            if augmented_column:
 
-            # inplace means the original DataFrame is modified rather than
-            # a copy.
-            repeat_frame.rename(
-                columns = {"": "You used the same name \
-                multiple times which is not allowed. Please\
-                edit your names."},
-                inplace = True
-            )
-                        
+                # According to the pandas documentation, the columns attribute
+                # of DataFrames are immutable pandas.Index objects. They are
+                # similar to tuples, but with added functionality. To convert
+                # Index objects to a list, the method to_list can be used.
+                columns_list = updated_matrix.columns.to_list()
 
-            return repeat_frame
-        
-        else:
-            occured_name_set.add(column_name)
+                columns_list[len(columns_list) - 1] = \
+                    augmented_column_name
+                
+                updated_matrix.columns = columns_list
 
-    if "Constant" in occured_name_set:
+            # return_matrix is set to a reactive value holding the updated
+            # matrix.
+            return_matrix.set(reactive.value(
+                updated_matrix
+            ))
 
-        # inplace means the original DataFrame is modified rather than
-        # a copy.
-        repeat_frame.rename(
-            columns = {"": 'You cannot use the name \
-            "Constant". Please change that name.'},
-            inplace = True
-        )
-        
-        return repeat_frame
-
-    return repeat_frame
+    return return_matrix, input.number_format
