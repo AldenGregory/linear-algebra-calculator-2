@@ -261,7 +261,8 @@ def single_output_server(
             output_calculation.columns = column_titles
 
         return render.DataGrid(
-            data = output_calculation
+            data = output_calculation,
+            width = "80%"
         )
      
     # This function display's calculations whose outputs are displayed as text.

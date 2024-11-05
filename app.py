@@ -42,14 +42,20 @@ def page_title(title):
 # function.
 
 app_ui = ui.page_navbar(
+    # This first panel will be explained. Other panels follow the same
+    # structure.
     ui.nav_panel(
         "Reduced Row Echelon and Row Echelon Form Calculator",
         page_title(
             "Reduced Row Echelon and Row Echelon Form Calculator"
         ),
+        # The module to handle matrix input for this nav_panel is added.
         matrix_input.matrix_input_ui("ref_and_rref_input"),
+        # The module to handle calculation output for this nav_panel is added.
         calculation_output.calculation_output_ui(
             "ref_and_rref_output",
+            # The text to be displayed on the button triggering calculations
+            # is passed to this module.
             calculate_button_label = "Row Reduce Matrix"
         )
     ),
@@ -85,6 +91,8 @@ app_ui = ui.page_navbar(
 
 def server(input: Inputs, outputs: Outputs, session: Session):
 
+    # The server part of the matrix_input module for each nav_panel is called
+    # and its outputs are stored.
     ref_and_rref_input_tuple = matrix_input.matrix_input_server(
         "ref_and_rref_input"
     )
@@ -122,6 +130,12 @@ def server(input: Inputs, outputs: Outputs, session: Session):
                         "columns should match."
     )
 
+    # The server component of the calculation_output module for each nav_panel
+    # is called and values outputted from the matrix_input modules are passed
+    # to them. Additionally, objects containing calculation functions whose
+    # output will be displayed in a nav_panel along with other attributes
+    # associated with these functions are passed to the server component of
+    # this module for each nav_panel.
     calculation_output.calculation_output_server(
         "ref_and_rref_output",
         ref_and_rref_input_tuple[0],
