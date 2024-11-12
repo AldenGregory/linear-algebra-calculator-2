@@ -62,7 +62,8 @@ def calculation_output_server(
     session,
     input_matrix,
     output_decimal,
-    *output_functions
+    *output_functions,
+    square = False
 ):
     '''
     This function defines the parts of the calculation_output module that
@@ -103,6 +104,14 @@ def calculation_output_server(
         if input_matrix_value.empty:
             "You have not yet added your input CSV file. Please add that file "
             "before performing this calculation."
+            return
+        
+        # This checks if the user entered a non-square matrix for a function
+        # that requires a square matrix. If they did, an error will show.
+        if square and not input_matrix_value.shape[0] == \
+            input_matrix_value.shape[1]:
+            "You did not enter a square matrix as the number of columns in "
+            "the matrix in your CSV file differed from the number of rows."
             return
         
         # It is checked that every column name is unique. Since the

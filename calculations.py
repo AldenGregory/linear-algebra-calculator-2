@@ -429,9 +429,6 @@ def determinant(matrix, output_decimal = False):
     Returns:
         The determinant of the user-entered matrix.
     '''
-    if matrix.shape[0] != matrix.shape[1]:
-        return "The numbers of rows and columns in your matrix do not " + \
-        "match, so the determinant cannot be calculated."
 
     ref_matrix = row_echelon_form(matrix)
 

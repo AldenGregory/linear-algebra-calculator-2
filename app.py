@@ -195,7 +195,8 @@ def server(input: Inputs, outputs: Outputs, session: Session):
             "Determinant",
             False,
             calculations.determinant
-        )
+        ),
+        square = True
     )
 
     calculation_output.calculation_output_server(
@@ -206,7 +207,8 @@ def server(input: Inputs, outputs: Outputs, session: Session):
             "Inverse Matrix",
             True,
             calculations.inverse
-        )
+        ),
+        square = True
     )
 
 # An app object that actually runs the app is created. 
