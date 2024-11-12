@@ -293,7 +293,7 @@ def single_output_server(
 
             # Each column is numbered.
             for i in range(len(output_calculation.columns)):
-                column_titles.append("Column" + str(i + 1))
+                column_titles.append("Column " + str(i + 1))
 
             # The output matrix's columns are set to the new column names.
             output_calculation.columns = column_titles
