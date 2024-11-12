@@ -14,8 +14,5 @@ Information for Development:
 
 This program has two requirements folders.
 
-1. requirements.txt: This folder is used for deploying the web app and should
-    only include packages actually used by the app.
-2. requirements_for_development.txt: This folder includes all packages used for
-    development and is the requirements folder whose contents should be
-    installed in a virtual environment.
+1. requirements.txt: This folder is used for deploying the web app and should only include packages actually used by the app.
+2. requirements-for-development.txt: This folder includes all packages used for development and is the requirements folder whose contents should be installed in a virtual environment.
