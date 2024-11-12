@@ -83,6 +83,15 @@ app_ui = ui.page_navbar(
             calculate_button_label = "Calculate Determinant"
         )
     ),
+    ui.nav_panel(
+        "Inverse Matrix Calculator",
+        page_title("Inverse Matrix Calculator"),
+        matrix_input.matrix_input_ui("inverse_input"),
+        calculation_output.calculation_output_ui(
+            "inverse_output",
+            calculate_button_label = "Calculate Inverse"
+        )
+    ),
     title = "Linear Algebra Calculator"
 )
 
@@ -122,6 +131,16 @@ def server(input: Inputs, outputs: Outputs, session: Session):
 
     determinants_input_tuple = matrix_input.matrix_input_server(
         "determinants_input",
+        square_matrix = True,
+        csv_entry_label =  "Your file should consist of integers, decimals" +\
+                        " or fractions " + \
+                        " of the format \"a/b\". It must hold a square " + \
+                        " matrix, meaning that the number of rows and " + \
+                        "columns should match."
+    )
+
+    inverse_input_tuple = matrix_input.matrix_input_server(
+        "inverse_input",
         square_matrix = True,
         csv_entry_label =  "Your file should consist of integers, decimals" +\
                         " or fractions " + \
@@ -176,6 +195,17 @@ def server(input: Inputs, outputs: Outputs, session: Session):
             "Determinant",
             False,
             calculations.determinant
+        )
+    )
+
+    calculation_output.calculation_output_server(
+        "inverse_output",
+        inverse_input_tuple[0],
+        inverse_input_tuple[1],
+        calculation_output.Output_Function(
+            "Inverse Matrix",
+            True,
+            calculations.inverse
         )
     )
 

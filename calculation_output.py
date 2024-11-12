@@ -149,10 +149,24 @@ def calculation_output_server(
             # whether it returns a frame or text to be outputted is determined
             # by the returns_frame property of the current Output_Function
             # object.
-            single_output_ui(
-                "Output_Calculation_" + str(i),
-                output_functions[i].returns_frame
-            )
+
+            if output_functions[i].returns_frame:
+
+                # If the output returns a frame, it is checked if that frame is
+                # empty.
+                single_output_ui(
+                    "Output_Calculation_" + str(i),
+                    True,
+                    output_calculation.empty
+                )
+
+            else:
+                # If the output does not return a frame, no value is passed for
+                # the parameter about whether the output frame is empty.
+                single_output_ui(
+                    "Output_Calculation_" + str(i),
+                    False
+                )
 
             # The server side component of the output module for this
             # calculation is created with a name that matches the ui side
@@ -164,21 +178,23 @@ def calculation_output_server(
             ) 
 
 @module.ui
-def single_output_ui(returns_frame):
+def single_output_ui(returns_frame, frame_empty = False):
     '''
     This function defines the ui component of specific calculation outputs. It
     either displays an output matrix with an option to download it or output
     text.
     Args:
-        returns_frame: a boolean set to true if the output should display a
+        returns_frame: a boolean set to True if the output should display a
         data_frame and False if it should display text.
+        frame: empty is a boolean set to true if the output frame is empty.
+        This variable is only applicable if returns_frame is True.
     Returns:
         a ui.column component holding either the output frame and a download
         button or output text.
     '''
 
     # This defines the ui output if a data_frame should be outputted.
-    if returns_frame:
+    if returns_frame and not frame_empty:
         return ui.column(
             12,
             # Unlike output_text, output_text_verbatim surrounds text in gray
@@ -191,6 +207,19 @@ def single_output_ui(returns_frame):
                 id = "download_output_matrix",
                 label = "Download Results",
                 style = "background-color: #AFE1AF;"
+            )
+        )
+    
+    # The download button will not appear if the returned frame is emtpy.
+    # Usually this is the case when the returned frame describes an error.
+    elif returns_frame:
+        return ui.column(
+            12,
+            # Unlike output_text, output_text_verbatim surrounds text in gray
+            # box.
+            spaced_section_core(
+                ui.output_text_verbatim("display_output_label"),
+                ui.output_data_frame("display_output_frame")
             )
         )
     

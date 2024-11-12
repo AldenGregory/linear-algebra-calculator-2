@@ -320,6 +320,103 @@ def reduced_row_echelon_form(matrix, output_decimal = False):
 
     return rref_matrix
 
+def inverse(matrix, output_decimal = False):
+    '''
+    This function is meant ot calculate the inverse of a user-entered matrix.
+    Args:
+        matrix: a pandas DataFrame holding the matrix of which the inverse 
+        will be calculated.
+        output_decimal: a boolean that is True if the inverse should be
+        outputted as a decimal and False otherwise.
+    '''
+
+    # Only square matrices will be passed into this function.
+    dimension = matrix.shape[0]
+
+    # An augmented column to solve for the input values necessary to create
+    # each column of the identity matrix is added to the input matrix.
+
+    for i in range(dimension):
+
+        column_list = []
+
+        for j in range(dimension):
+            
+            # In the identity matrix, each entry where the row is equal to the
+            # column is set to one. Other entries are set to 0. 
+            if j == i:
+                column_list.append(1)
+            
+            else:
+                column_list.append(0)
+
+        # The column of the identity matrix is append as an augmented column to
+        # the input matrix. Column titles do not matter as they will be changed
+        # and only are used for testing.
+        matrix["Identity " + str(i + 1)] = column_list
+
+    # Once the matrix is brought to reduced row echelon form, the 
+    # augmented columns should represent the input vectors that would bring
+    # their respective column of the input matrix to the same column number of
+    # the identity matrix. So the augmented columns in reduced row echelon form
+    # represent the inverse of the input matrix. 
+    rref_matrix = reduced_row_echelon_form(matrix)
+
+    # If there were any errors in reducing the matrix row reduced row echelon
+    # form an empty matrix with the error will be returned.
+
+    if rref_matrix.empty:
+        return rref_matrix
+    
+    # If the input matrix has any zero rows, it is not invertible, as because
+    # it has the same number of rows as columns, that would indicate that not
+    # every column has a pivot. So there would be a free variable meaning that
+    # multiple vectors would be transformed by the input matrix to the same
+    # vector -- an operation that cannot be undone.
+    # To check if a square matrix in reduced row echelon form has no zero rows,
+    # it is only necessary to check that it is the identity matrix, as square
+    # matrices with no free variables in reduced row echelon form must be the
+    # identity matrix.
+
+    for i in range(dimension):
+        # If each entry along the diagonal of the original matrix in 
+        # reduced row echelon form is one, it is invertible as explained in
+        # the column above. This checks that the matrix in reduced row echelon
+        # form is the identity matrix.
+        if rref_matrix.iat[i, i] != 1:
+            error_matrix = pd.DataFrame()
+
+            error_matrix["The matrix you entered is not invertible."] = []
+            
+            return  error_matrix
+        
+    inverse_matrix = pd.DataFrame()
+
+    # The column names of rref_matrix are of the following form:
+    # 0, 1, 2, ..., dimension - 1, dimension, dimension + 1, ..., 2 * dimension
+    # - 1.
+    for i in range(dimension): 
+        # dimension + i starts at dimension and goes up to 2 * dimension - 1
+        # so every augmented column of rref matrix is added to inverse_matrix.
+        inverse_matrix["Column " + str(i + 1)] = \
+        rref_matrix[dimension + i]
+
+    if output_decimal:
+
+        # inverse_matrix is converted from a DataFrame to a numpy array
+        # as convert_fractions_to_decimal assumes the input is a numpy array.
+        inverse_array = inverse_matrix.to_numpy()
+
+        convert_fractions_to_decimal(inverse_array)
+        
+        # inverse_array is converted back to a DataFrame and its data
+        # inverse_matrix is set assigned to the object created by the
+        # conversion.
+        inverse_matrix = pd.DataFrame(data = inverse_array)
+
+    return inverse_matrix
+
+
 def determinant(matrix, output_decimal = False):
     '''
     This function is meant to calculate the determinant of a user-entered
