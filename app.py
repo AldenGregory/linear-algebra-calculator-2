@@ -4,6 +4,7 @@ import matrix_input
 import calculation_output
 import linear_systems
 import calculations
+import subspaces
 
 from shiny import App, Inputs, Outputs, Session, render, ui
     
@@ -92,6 +93,15 @@ app_ui = ui.page_navbar(
             calculate_button_label = "Calculate Inverse"
         )
     ),
+    ui.nav_panel(
+        "Matrix Subspace Bases Calculator",
+        page_title("Matrix Subspace Bases Calculator"),
+        matrix_input.matrix_input_ui("subspaces_input"),
+        calculation_output.calculation_output_ui(
+            "subspaces_output",
+            calculate_button_label = "Calculate Subspace Bases"
+        )
+    ),
     title = "Linear Algebra Calculator"
 )
 
@@ -147,6 +157,10 @@ def server(input: Inputs, outputs: Outputs, session: Session):
                         " of the format \"a/b\". It must hold a square " + \
                         " matrix, meaning that the number of rows and " + \
                         "columns should match."
+    )
+
+    subspaces_input_tuple = matrix_input.matrix_input_server(
+        "subspaces_input"
     )
 
     # The server component of the calculation_output module for each nav_panel
@@ -209,6 +223,27 @@ def server(input: Inputs, outputs: Outputs, session: Session):
             calculations.inverse
         ),
         square = True
+    )
+
+    calculation_output.calculation_output_server(
+        "subspaces_output",
+        subspaces_input_tuple[0],
+        subspaces_input_tuple[1],
+        calculation_output.Output_Function(
+            "Basis for Null Space",
+            True,
+            subspaces.null_space_basis
+        ),
+        calculation_output.Output_Function(
+            "Basis for Column Space", 
+            True,
+            subspaces.column_space_basis
+        ),
+        calculation_output.Output_Function(
+            "Basis for Row Space",
+            True,
+            subspaces.row_space_basis
+        )
     )
 
 # An app object that actually runs the app is created. 

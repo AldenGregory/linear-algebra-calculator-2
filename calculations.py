@@ -322,12 +322,15 @@ def reduced_row_echelon_form(matrix, output_decimal = False):
 
 def inverse(matrix, output_decimal = False):
     '''
-    This function is meant ot calculate the inverse of a user-entered matrix.
+    This function is meant to calculate the inverse of a user-entered matrix.
     Args:
         matrix: a pandas DataFrame holding the matrix of which the inverse 
         will be calculated.
         output_decimal: a boolean that is True if the inverse should be
-        outputted as a decimal and False otherwise.
+        outputted decimals and False otherwise.
+    Returns:
+        a pandas DataFrame holding the inverse matrix for the inputted matrix
+        or an error matrix.
     '''
 
     # Only square matrices will be passed into this function.

@@ -231,18 +231,24 @@ def solution_set(linear_system, output_decimal):
 
     return solution_string_frame
 
-def parametric_vector_solution_set(linear_system, output_decimal):
+def parametric_vector_solution_set(linear_system, output_decimal, 
+                                   return_vectors = False):
     '''
     The purpose of this function is to find the solution set to a linear system
-    and return the solution in a way that that it can be displayed in parametric
-    vector form.
+    and return the solution in a way that that it can be displayed in
+    parametric vector form.
     Args:
         linear_system: a DataFrame holding the augmented matrix for the linear
         system with variable names as headers.
-        output_decimal: a boolean that is true if the user wants their output as
-        decimals and false if they want it as fractions.
+        output_decimal: a boolean that is True if the user wants their output
+        as decimals and False if they want it as fractions.
+        return_vectors: a boolean that is True if the function should return a
+        DataFrame of the solution vectors. (This will mainly be the case when
+        this function is called by other functions, as by default, this
+        function returns a DataFrame meant to be easy to read, not easy to
+        use for other purposes.)
     Returns:
-        a DataFrame holding the solution to the lienar system in parametric
+        a DataFrame holding the solution to the linear system in parametric
         vector form.
     '''
 
@@ -272,8 +278,8 @@ def parametric_vector_solution_set(linear_system, output_decimal):
     solved_system_array = solved_system_frame.to_numpy()
 
     # A dictionary of solution vectors is created. The constant vector is added
-    # by default in case there are no free variables and every variable is equal
-    # to zero.
+    # by default in case there are no free variables and every variable is
+    # equal to zero.
     solution_vectors = {"Constant" : [0] * len(variable_names)}
 
     # This will be used to access constants when solving for variables.
@@ -299,8 +305,8 @@ def parametric_vector_solution_set(linear_system, output_decimal):
 
         # j goes up to the second to last column since the last column
         # represents constants. It starts one higher than the previous pivot
-        # because in row echelon form there will never be a pivot that is not to
-        # the right of the previous pivot position.
+        # because in row echelon form there will never be a pivot that is not
+        # to the right of the previous pivot position.
         for j in range(previous_pivot + 1, solved_system_array.shape[1] - 1):
 
             coefficient = solved_system_array[i, j]
@@ -324,9 +330,9 @@ def parametric_vector_solution_set(linear_system, output_decimal):
                 zero_row_reached = True
 
             elif not pivot_column_reached and coefficient == 0:
-                # If there is a 0 coefficient in a column that exists before the
-                # first pivot position in its row and after the pivot in the
-                # previous row, that column is not a pivot column so its
+                # If there is a 0 coefficient in a column that exists before
+                # the first pivot position in its row and after the pivot in
+                # the previous row, that column is not a pivot column so its
                 # variable is free.
 
                 # This ensures that this column will be added as a free 
@@ -384,16 +390,17 @@ def parametric_vector_solution_set(linear_system, output_decimal):
         i += 1
 
     # If the last column has been a pivot, it is still possible for the system
-    # to be inconsistent. The while loop only catches inconsistent systems where
-    # there are free variables between the last pivot column and the pivot in
-    # the constant column. Since the row after a pivot in the last column is
-    # guaranteed to be a zero row, if there is a row after the pivot in the last
-    # column, the program will only check if there is a nonzero number in the 
-    # constant column of that row. Since all rows entirely full of zeros are at
-    # the bottom in reduced row echelon form, there is no need to check lower
-    # rows. If a zero row has been reached, then that row is the only row that
-    # can have a pivot in its augmented column rather than the row after the
-    # the last row checked in the loop, so 1 is subtracted from i.
+    # to be inconsistent. The while loop only catches inconsistent systems 
+    # where there are free variables between the last pivot column and the
+    # pivot in the constant column. Since the row after a pivot in the last
+    # column is guaranteed to be a zero row, if there is a row after the pivot
+    # in the last column, the program will only check if there is a nonzero
+    # number in the constant column of that row. Since all rows entirely full
+    # of zeros are at the bottom in reduced row echelon form, there is no need
+    # to check  lower rows. If a zero row has been reached, then that row is
+    # the only row that can have a pivot in its augmented column rather than
+    # the row after the  the last row checked in the loop, so 1 is subtracted
+    # from i.
 
     if zero_row_reached:
         i -= 1
@@ -403,7 +410,7 @@ def parametric_vector_solution_set(linear_system, output_decimal):
         if solved_system_array[i, last_column_index] != 0:
 
             inconsistent_array = np.array([
-                ["This system is inconsistent sothere are no solutions."]]
+                ["This system is inconsistent so there are no solutions."]]
                 )
             
             inconsistent_frame = pd.DataFrame (
@@ -432,21 +439,12 @@ def parametric_vector_solution_set(linear_system, output_decimal):
                 current_vector[j] = 1
 
                 solution_vectors[variable_names[j]] = current_vector
-        
-    # Dictionary is finished here so after this it needs to be formatted into 
-    # DataFrame.
 
-    parametric_vector_frame = pd.DataFrame()
-
-    parametric_vector_frame["Column 1"] = variable_names
-
-    # The equals symbol is added in the middle of the third column. 
-    equal_column = [""] * len(variable_names)
-
-    equal_column[len(variable_names) // 2] = "="
-
-    parametric_vector_frame["Column 2"] = equal_column
-
+    # As long as the constant vector is not the only vector, it is removed if
+    # it consists of all zeros. For homogenous equations, it will always be all
+    # zeros so will be removed unless it is the only solution vector. The
+    # reason is that a vector of all zeros is implied unless it is the only
+    # vector in the solution.
     if len(solution_vectors) > 1:
         constant_all_zeros = True
 
@@ -468,63 +466,86 @@ def parametric_vector_solution_set(linear_system, output_decimal):
 
         if constant_all_zeros:
             solution_vectors.pop("Constant")
+        
+    # Dictionary is finished here so after this it needs to be formatted into 
+    # DataFrame that the user can read. But if the vectors are needed directly,
+    # a DataFrame with just the solution vectors is returned as readability is
+    # less important than functionaltiy.
 
-        # This variable will be incremented later as columsn are added to the 
-        # parametric_vector_frame.
-        current_column = 3
+    if return_vectors:
+        # The solution vectors will be made into a list with vectors
+        # horizontal. This is done as the values method does not return a list
+        # so cannot correctly be converted to a numpy array. Lists of multiple
+        # dimensions can be converted into multidimensional numpy array.
+        vector_list = list(solution_vectors.values())
 
-        if "Constant" in solution_vectors:
-            parametric_vector_frame["Column 3"] = solution_vectors["Constant"]
+        # vector_list is converted into a 2d numpy array. Then that array is
+        # transposed so that vectors can be vertical rather than horizontal.
+        vector_array = np.transpose(np.array(vector_list))
+
+        return pd.DataFrame(data = vector_array)
+
+    parametric_vector_frame = pd.DataFrame()
+
+    parametric_vector_frame["Column 1"] = variable_names
+
+    # The equals symbol is added in the middle of the third column. 
+    equal_column = [""] * len(variable_names)
+
+    equal_column[len(variable_names) // 2] = "="
+
+    parametric_vector_frame["Column 2"] = equal_column
+
+    # This variable will be incremented later as columns are added to the 
+    # parametric_vector_frame.
+    current_column = 3
+
+    if "Constant" in solution_vectors:
+        parametric_vector_frame["Column 3"] = solution_vectors["Constant"]
+
+        current_column += 1
+
+    for i in range(len(variable_names)):
+        variable_name = variable_names[i]
+
+        # Entering this if statement means that variable_names[i] is a free
+        # variable.
+        if variable_name in solution_vectors:
+
+            # This if statement is only not entered for the first vector 
+            # when there is no constant vector.
+            if current_column > 3:
+    
+                # The plus symbol is added in the middle of the next
+                # column. 
+                plus_column = [""] * len(variable_names)
+
+                plus_column[len(variable_names) // 2] = "+"
+
+                parametric_vector_frame[f"Column {current_column}"] = \
+                    plus_column
+
+                current_column += 1
+
+            # The variable name is added in the middle of the third
+            # column. 
+            variable_column = [""] * len(variable_names)
+
+            variable_column[len(variable_names) // 2] = variable_name
+
+            parametric_vector_frame[f"Column {current_column}"] = \
+                variable_column
 
             current_column += 1
 
-        for i in range(len(variable_names)):
-            variable_name = variable_names[i]
+            # The column containing the vector associated with the variable
+            # is added.
 
-            # Entering this if statement means that variable_names[i] is a free
-            # variable.
-            if variable_name in solution_vectors:
+            vector_column = solution_vectors[variable_name]
 
-                # This if statement is only not entered for the first vector 
-                # when there is no constant vector.
-                if current_column > 3:
-        
-                    # The plus symbol is added in the middle of the next
-                    # column. 
-                    plus_column = [""] * len(variable_names)
-
-                    plus_column[len(variable_names) // 2] = "+"
-
-                    parametric_vector_frame[f"Column {current_column}"] = \
-                        plus_column
-
-                    current_column += 1
-
-                # The variable name is added in the middle of the third
-                # column. 
-                variable_column = [""] * len(variable_names)
-
-                variable_column[len(variable_names) // 2] = variable_name
-
-                parametric_vector_frame[f"Column {current_column}"] = \
-                    variable_column
-
-                current_column += 1
-
-                # The column containing the vector associated with the variable
-                # is added.
-
-                vector_column = solution_vectors[variable_name]
-
-                parametric_vector_frame[f"Column {current_column}"] = \
-                    vector_column
-                
-                current_column += 1
-
-    else:
-        # If there is only one vector, it is the constant column, so it will
-        # be added even if it is all 0.
-        parametric_vector_frame["Column 3"] = solution_vectors["Constant"]
-
+            parametric_vector_frame[f"Column {current_column}"] = \
+                vector_column
+            
+            current_column += 1
 
     return parametric_vector_frame
