@@ -141,6 +141,41 @@ def column_space_basis(matrix, output_decimal):
 
     return column_space_matrix
 
+def left_null_space_basis(matrix, output_decimal):
+    '''
+    This function is meant to calculate a bass for the left null space, the
+    null space for row vectors left multiplied by the user inputted matrix.
+    Args:
+        matrix: A pandas DataFrame holding the matrix of which the row space 
+        will be calculated.
+        output_decimal: A boolean that is True if the row space should be
+        outputted as decimals and False otherwise.
+    Returns:
+        A pandas DataFrame with columns holding vectors that make up the left
+        null space of the user inputted matrix.
+    '''
+
+    # The left_null_space is found by calculating the null space of the
+    # input matrix transposed. This works because left multiplying by a row
+    # vector multiplies each entry in a column by each element of the vector
+    # and adding them up for each column. Similarly right multiplying the
+    # tranpose of a matrix by a column vector is like multiplying each entry
+    # in the vector by what was each entry in each column of the original
+    # matrix but is now each entry in each row, and adding them up. So in
+    # each scenario, the same input vectors will lead to an output of the zero
+    # vector.
+
+    # Entry matrix is tranposed as an array
+    matrix_array = matrix.to_numpy()
+
+    transposed_array = np.transpose(matrix_array)
+
+    transposed_matrix = pd.DataFrame(data = transposed_array)
+
+    # The null space basis matrix of the transposed matrix or an error matrix
+    # is returned.
+    return null_space_basis(transposed_matrix, output_decimal)
+
 def row_space_basis(matrix, output_decimal):
     '''
     This function is meant to calculate a basis for the row space of a user

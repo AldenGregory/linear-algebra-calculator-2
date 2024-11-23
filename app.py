@@ -102,6 +102,15 @@ app_ui = ui.page_navbar(
             calculate_button_label = "Calculate Subspace Bases"
         )
     ),
+    ui.nav_panel(
+        "LU Factorization Calculator",
+        page_title("LU Factoriation Calculator"),
+        matrix_input.matrix_input_ui("LU_input"),
+        calculation_output.calculation_output_ui(
+            "LU_output",
+            calculate_button_label = "LU Factor Matrix"
+        )
+    ),
     title = "Linear Algebra Calculator"
 )
 
@@ -161,6 +170,10 @@ def server(input: Inputs, outputs: Outputs, session: Session):
 
     subspaces_input_tuple = matrix_input.matrix_input_server(
         "subspaces_input"
+    )
+
+    LU_input_tuple = matrix_input.matrix_input_server(
+        "LU_input"
     )
 
     # The server component of the calculation_output module for each nav_panel
@@ -240,9 +253,25 @@ def server(input: Inputs, outputs: Outputs, session: Session):
             subspaces.column_space_basis
         ),
         calculation_output.Output_Function(
+            "Basis for Left Null Space",
+            True, 
+            subspaces.left_null_space_basis
+        ),
+        calculation_output.Output_Function(
             "Basis for Row Space",
             True,
             subspaces.row_space_basis
+        )
+    )
+
+    calculation_output.calculation_output_server(
+        "LU_output",
+        LU_input_tuple[0],
+        LU_input_tuple[1],
+        calculation_output.Output_Function(
+            "LU Factorized Matrix",
+            True,
+            calculations.LU_factorize
         )
     )
 

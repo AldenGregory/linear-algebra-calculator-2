@@ -20,7 +20,7 @@ def row_echelon_form(matrix, output_decimal = False):
         matrix - A panda DataFrame that holds the matrix entered by the user.
         The type of elements within the DataFrame may vary.
         output_decimal - a boolean that is true if the user wants the output
-        matrix to have decimals rather than fractions
+        matrix to have decimals rather than fractions.
     Returns:
         A panda DataFrame that holds a matrix in row echelon form that is row
         equivalent to the matrix entered by the user.
@@ -28,12 +28,12 @@ def row_echelon_form(matrix, output_decimal = False):
 
     matrix = matrix.astype(object)
 
-    # The matrix is converted to floats so that it can be created to a numpy
+    # The matrix is converted to fractions so that it can be created to a numpy
     # array of floats that can have math done on it.
-    all_decimals = convert_to_fractions(matrix)
+    all_valid_numbers = convert_to_fractions(matrix)
 
     # If the matrix is not all fractions, an error DataFrame is returned.
-    if not all_decimals:
+    if not all_valid_numbers:
 
         empty = np.array([])
 
@@ -137,6 +137,173 @@ def row_echelon_form(matrix, output_decimal = False):
     ref_matrix.row_swaps_from_original = total_row_swaps
 
     return ref_matrix
+
+def LU_factorize(matrix, output_decimal = False):
+    '''
+    This function is meant to find the LU factorization of a user-entered
+    matrix.
+    Args:
+        matrix - A panda DataFrame that holds the matrix entered by the user.
+        The type of elements within the DataFrame may vary.
+        output_decimal - a boolean that is true if the user wants the output
+        matrix to have decimals rather than fractions.
+    Returns:
+        A panda DataFrame that holds both the L matrix and the U matrix with a
+        dividing column between them.
+    '''
+    matrix = matrix.astype(object)
+
+    # The matrix is converted to fractions so that it can be created to a numpy
+    # array of floats that can have math done on it.
+    all_valid_numbers = convert_to_fractions(matrix)
+
+    # If the matrix is not all fractions, an error DataFrame is returned.
+    if not all_valid_numbers:
+
+        empty = np.array([])
+
+        error_frame = Matrix(empty)
+
+        error_frame.columns = ["At least one of the entries in\
+        your matrix is not a valid number."]
+
+        return error_frame
+    
+    # A 2d array to hold the L matrix is created. This is a square matrix
+    # with the same dimension as the number of rows in matrix U. This is 
+    # necessary because to perform the multiplication L*U the number of columns
+    # in L must match the number of rows in U. Additionally, L must have the
+    # same number of row as U because LU must have the same number of rows as
+    # the original matrix and the product LU has the same number of rows as L.
+    L_array = np.full([matrix.shape[0], matrix.shape[0]], Fraction(0))
+    L_column = 0
+
+    # Diagonals of L_array are set to 1 so that columns of L that are not
+    # needed if there are fewer pivots in U than columns in L, L has
+    # columns from identity matrix by default.
+
+    for i in range(L_array.shape[0]):
+        L_array[i, i] = 1
+
+    # The DataFrame is converted to numpy array so math can be done on it.
+    U_array = matrix.to_numpy()
+
+    corner_row = 0
+
+    corner_column = 0
+
+    # The operations to row reduce U_array to echelon form are performed in
+    # this while loop. Each time a column is filled with zeros below the pivot
+    # position, the corner is moved one down and one to the right.
+    # Each time there is a zero column, the corner is moved one to the right.
+    # Once the corner is outside the matrix, the while loop ends. 
+    while corner_row < U_array.shape[0] and corner_column < \
+        U_array.shape[1]:
+
+        zero_column = True
+
+        i = corner_row
+
+        # The code below checks if the current column is a zero_column
+        while zero_column and i < U_array.shape[0]:
+
+            # If any row in the corner column has a nonzero entry, then
+            # zero_column is set to False. 
+            if U_array[i, corner_column] != 0:
+                zero_column = False
+
+            i += 1
+
+        # This is entered if every row in the corner column holds a 0.
+        if zero_column:
+            
+            # The pivot position within the corner row is moved one to the
+            # right
+
+            corner_column += 1
+
+        # This if statement brings all rows entries in the corner column below
+        # that of the corner row to zero. This is only possible if the column
+        # is not a zero column.
+        if not zero_column:           
+            
+            # LU factorization cannot involve row swaps. If row swaps are
+            # necessary, PLU factorization would be needed.
+
+            corner_num = U_array[corner_row, corner_column]
+
+            if corner_num == 0: 
+                empty = np.array([])
+
+                cannot_factor_frame = Matrix(empty)
+
+                cannot_factor_frame.columns = ["The matrix you entered is " + \
+                                               "not LU factorizable."]
+
+                return cannot_factor_frame
+            
+            # The next column of the L_matrix is added based on the ratios of
+            # each row entry in the column to the corner_row entry
+
+            # An array is made from corner column of the current U_array.
+            # Unlike with normal 2d lists, this splice refers to locations 
+            # in the actual numpy array, not to a copy of the array, so .copy()
+            # is necessary
+            next_L_column = U_array[:, corner_column].copy()
+
+            # Each number in this array above corner_row is set to 0
+            for i in range(0, corner_row):
+                next_L_column[i] = 0
+
+            # Numbers in this array are changed to ratios of each entry to the
+            # entry in corner_column
+
+            next_L_column /= next_L_column[corner_column]
+
+            # The next column is added to L
+
+            L_array[:, L_column] = next_L_column
+
+            L_column += 1
+
+            # This for loop brings every entry in the corner column below the
+            # corner row to zero.
+            for i in range(corner_row + 1, U_array.shape[0]):
+                
+                ratio =  U_array[i, corner_column] / corner_num
+
+                U_array[i] += -1 * ratio * U_array[corner_row]
+
+            # The corner row is moved one down and the column is moved one to
+            # the right.
+            corner_row += 1
+            corner_column += 1
+
+    # The U matrix and the L matrix are converted to decimals if the user
+    # wants decimal outputs.
+    if output_decimal:
+        convert_fractions_to_decimal(L_array)
+        convert_fractions_to_decimal(U_array)
+    
+    LU_frame = pd.DataFrame()
+
+    # L_array and U_array are combined into the LU_frame
+
+    for i in range(L_array.shape[1]):
+        # Each column of the L_array is added to the LU_frame
+        LU_frame["L" + str(i + 1)] = L_array[:,i]
+    
+    # An array to divide L and U is added
+    multiply_array = [""] * L_array.shape[0]
+    multiply_array[len(multiply_array) // 2] = "*"
+
+    LU_frame["Multiplied By"] = multiply_array
+
+    for i in range(U_array.shape[1]):
+        # Each column of the L_array is added to the LU_frame
+        LU_frame["U" + str(i + 1)] = U_array[:,i]
+
+    return LU_frame
 
 def convert_to_fractions(matrix):
     '''

@@ -9,7 +9,8 @@ Calculator Functions Included (More Will Be Added):
 2. Finding the Solution Set to a System of Linear Equations
 3. Calculating the Determinant of a Square Matrix
 4. Calculating the Inverse of a Square Matrix
-5. Calculating Bases for Subspaces Associated with a Matrix
+5. Calculating Bases for the Fundamental Subspaces of a Matrix
+6. LU Factorizing a Matrix
 
 Information for Development:
 
