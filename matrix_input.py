@@ -309,6 +309,13 @@ def matrix_input_server(
                     )
             
             # The label for the manual entry table is displayed.
+            navigation_instructions = "To move to the right in "+\
+            "the input table, press tab. To move to the left press, shift " + \
+            "+ tab. To move down press enter. To move up press shift " + \
+            "+ enter. " 
+
+            spaced_section(navigation_instructions)
+
             spaced_section(manual_entry_label)
 
             # This function displays the actual input matrix to the user.
