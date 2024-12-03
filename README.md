@@ -20,3 +20,7 @@ This program has two requirements folders.
 
 1. requirements.txt: This folder is used for deploying the web app and should only include packages actually used by the app.
 2. requirements-for-development.txt: This folder includes all packages used for development and is the requirements folder whose contents should be installed in a virtual environment.
+
+To install the libraries necessary for development of this project, a virtual environment should be created. Within the virtual environment, the following command should be run:
+
+pip freeze > requirements.txt
