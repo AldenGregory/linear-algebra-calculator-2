@@ -23,7 +23,7 @@ This program has two requirements files.
 1. requirements.txt: Contains only the packages required to run and deploy the application.
 2. requirements-for-development.txt: Contains all packages needed for development.
 
-## Steps to Run Locally
+## Running Locally
 
 1. Clone this repository.
 2. Install the project dependencies:
