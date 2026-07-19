@@ -1,4 +1,4 @@
-# linear-algebra-calculator
+# Linear Algebra Calculator
 
 The goal of this project is to provide a user-friendly way to automatically
 perform introductory level linear algebra calculations.
