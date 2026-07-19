@@ -20,14 +20,14 @@ https://aldenaccount.shinyapps.io/linear-algebra-calculator/
 
 This program has two requirements files.
 
-1. requirements.txt: This files is used for deploying the web application and should only include packages actually used by the app.
-2. requirements-for-development.txt: This folder includes all packages used for development and is the requirements folder whose contents should be installed when running locally.
+1. requirements.txt: Contains only the packages required to run and deploy the application.
+2. requirements-for-development.txt: Contains all packages needed for development.
 
 ## Steps to Run Locally
 
 1. Clone this repository.
 2. Install the project dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-for-development.txt
 ```
 3. Run the application.
