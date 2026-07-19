@@ -3,7 +3,7 @@
 The goal of this project is to provide a user-friendly way to automatically
 perform introductory level linear algebra calculations.
 
-## Website Application
+## Live Demo
 
 https://aldenaccount.shinyapps.io/linear-algebra-calculator/
 
